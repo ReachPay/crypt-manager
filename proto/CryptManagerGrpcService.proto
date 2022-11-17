@@ -1,0 +1,26 @@
+
+syntax = "proto3";
+package crypt_manager;
+
+message CryptCallbackMessgeRequest{
+    string Message = 1;
+    string MerchantId = 2;
+}
+
+message CryptCallbackMessgeResponse{
+    string Message = 1;
+}
+
+message GetMerchantPublicKeyRequest {
+    string MerchantId = 1;
+}
+
+message GetMerchantPublicKeyResponse {
+    optional string KeyContent = 1;
+}
+
+service CryptManagerGrpcService {
+    rpc CryptMessage(crypt_manager.CryptCallbackMessgeRequest) returns (crypt_manager.CryptCallbackMessgeResponse);
+    rpc GetPublicKey(crypt_manager.GetMerchantPublicKeyRequest) returns (crypt_manager.GetMerchantPublicKeyResponse);
+    rpc ResetKeyPair(crypt_manager.GetMerchantPublicKeyRequest) returns (crypt_manager.GetMerchantPublicKeyResponse);
+}

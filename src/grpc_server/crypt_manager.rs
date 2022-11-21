@@ -12,6 +12,7 @@ impl CryptManagerGrpcService for GrpcService {
         request: tonic::Request<CryptCallbackMessgeRequest>,
     ) -> Result<tonic::Response<CryptCallbackMessgeResponse>, tonic::Status> {
 
+        println!("Got a request");
         let CryptCallbackMessgeRequest{message, merchant_id} = request.into_inner();
 
         let key = match self.app.keys_store.get_merchant_private_key(&merchant_id).await {
@@ -35,6 +36,8 @@ impl CryptManagerGrpcService for GrpcService {
         &self,
         request: tonic::Request<GetMerchantPublicKeyRequest>,
     ) -> Result<tonic::Response<GetMerchantPublicKeyResponse>, tonic::Status> {
+
+        println!("Get public key request");
         
         let GetMerchantPublicKeyRequest{merchant_id} = request.into_inner();
 
@@ -47,8 +50,11 @@ impl CryptManagerGrpcService for GrpcService {
             },
         };
 
+        println!("Get public key request key: {:?}", key);
+
         let result = get_public_rsa_key_from_private(key).unwrap();
 
+        println!("Get public key request key: {:?}", result);
         return Ok(tonic::Response::new(GetMerchantPublicKeyResponse{
             key_content: Some(String::from_utf8(result).unwrap())
         }));
@@ -59,9 +65,11 @@ impl CryptManagerGrpcService for GrpcService {
         request: tonic::Request<GetMerchantPublicKeyRequest>,
     ) -> Result<tonic::Response<GetMerchantPublicKeyResponse>, tonic::Status> {
            
+        println!("Reset key pair request");
         let GetMerchantPublicKeyRequest{merchant_id} = request.into_inner();
 
         let (private, public) = generate_rsa_keypeir().unwrap();
+        println!("Reset key pair request key: p:{:?}, p: {:?}", private, public);
         self.app.keys_store.update_key(&merchant_id, private.clone()).await;
 
         return Ok(tonic::Response::new(GetMerchantPublicKeyResponse{

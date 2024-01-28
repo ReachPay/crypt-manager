@@ -1,6 +1,7 @@
 use crypt_utils::{
     encode_message_to_jwt_rsa, generate_rsa_keypeir, get_public_rsa_key_from_private,
 };
+service_sdk::macros::use_grpc_server!();
 use serde_json::Value;
 
 use super::server::GrpcService;
@@ -9,15 +10,17 @@ use crate::crypt_manager_grpc::*;
 
 #[tonic::async_trait]
 impl CryptManagerGrpcService for GrpcService {
+    #[with_telemetry]
     async fn crypt_message(
         &self,
-        request: tonic::Request<CryptCallbackMessgeRequest>,
-    ) -> Result<tonic::Response<CryptCallbackMessgeResponse>, tonic::Status> {
-        println!("Got a request");
-        let CryptCallbackMessgeRequest {
+        request: tonic::Request<CryptCallbackMessageRequest>,
+    ) -> Result<tonic::Response<CryptCallbackMessageResponse>, tonic::Status> {
+        let request = request.into_inner();
+
+        let CryptCallbackMessageRequest {
             message,
             merchant_id,
-        } = request.into_inner();
+        } = request;
 
         let key = match self
             .app
@@ -39,7 +42,7 @@ impl CryptManagerGrpcService for GrpcService {
         let message: Value = serde_json::from_str(&message).unwrap();
         let result = encode_message_to_jwt_rsa(message, &key).unwrap();
 
-        return Ok(tonic::Response::new(CryptCallbackMessgeResponse {
+        return Ok(tonic::Response::new(CryptCallbackMessageResponse {
             message: result,
         }));
     }
@@ -99,5 +102,12 @@ impl CryptManagerGrpcService for GrpcService {
         return Ok(tonic::Response::new(GetMerchantPublicKeyResponse {
             key_content: Some(String::from_utf8(public).unwrap()),
         }));
+    }
+
+    async fn ping(
+        &self,
+        _request: tonic::Request<()>,
+    ) -> Result<tonic::Response<()>, tonic::Status> {
+        Ok(tonic::Response::new(()))
     }
 }

@@ -1,15 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(my_settings_reader::SettingsModel, Serialize, Deserialize, Debug, Clone)]
-pub struct SettingsModel {
-    #[serde(rename = "MyTelemetry")]
-    pub my_telemetry: String,
-}
+service_sdk::macros::use_settings!();
 
-#[async_trait::async_trait]
-impl my_telemetry_writer::MyTelemetrySettings for SettingsReader {
-    async fn get_telemetry_url(&self) -> String {
-        let read_access = self.settings.read().await;
-        read_access.my_telemetry.clone()
-    }
+#[derive(
+    my_settings_reader::SettingsModel,
+    AutoGenerateSettingsTraits,
+    SdkSettingsTraits,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+)]
+pub struct SettingsModel {
+    pub my_telemetry: String,
+    pub seq_conn_string: String,
 }

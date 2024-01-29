@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let settings_reader = crate::settings::SettingsReader::new(".reachpay").await;
+    let settings_reader = crate::settings::SettingsReader::new(".reach-pay").await;
 
     let settings_reader = Arc::new(settings_reader);
 

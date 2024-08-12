@@ -1,6 +1,4 @@
-use crypt_utils::{
-    encode_message_to_jwt_rsa, generate_rsa_keypeir, get_public_rsa_key_from_private,
-};
+use crypt_utils::*;
 service_sdk::macros::use_grpc_server!();
 use serde_json::Value;
 
@@ -30,7 +28,7 @@ impl CryptManagerGrpcService for GrpcService {
         {
             Some(key) => key,
             None => {
-                let (private, _) = generate_rsa_keypeir().unwrap();
+                let (private, _) = generate_rsa_key_pair().unwrap();
                 self.app
                     .keys_store
                     .update_key(&merchant_id, private.clone())
@@ -47,26 +45,25 @@ impl CryptManagerGrpcService for GrpcService {
         }));
     }
 
+    #[with_telemetry]
     async fn get_public_key(
         &self,
         request: tonic::Request<GetMerchantPublicKeyRequest>,
     ) -> Result<tonic::Response<GetMerchantPublicKeyResponse>, tonic::Status> {
-        println!("Get public key request");
-
-        let GetMerchantPublicKeyRequest { merchant_id } = request.into_inner();
+        let request = request.into_inner();
 
         let key = match self
             .app
             .keys_store
-            .get_merchant_private_key(&merchant_id)
+            .get_merchant_private_key(&request.merchant_id)
             .await
         {
             Some(key) => key,
             None => {
-                let (private, _) = generate_rsa_keypeir().unwrap();
+                let (private, _) = generate_rsa_key_pair().unwrap();
                 self.app
                     .keys_store
-                    .update_key(&merchant_id, private.clone())
+                    .update_key(&request.merchant_id, private.clone())
                     .await;
                 private.clone()
             }
@@ -82,21 +79,22 @@ impl CryptManagerGrpcService for GrpcService {
         }));
     }
 
+    #[with_telemetry]
     async fn reset_key_pair(
         &self,
-        request: tonic::Request<GetMerchantPublicKeyRequest>,
+        request: tonic::Request<ResetKeyPairRequest>,
     ) -> Result<tonic::Response<GetMerchantPublicKeyResponse>, tonic::Status> {
         println!("Reset key pair request");
-        let GetMerchantPublicKeyRequest { merchant_id } = request.into_inner();
+        let request = request.into_inner();
 
-        let (private, public) = generate_rsa_keypeir().unwrap();
+        let (private, public) = generate_rsa_key_pair().unwrap();
         println!(
             "Reset key pair request key: p:{:?}, p: {:?}",
             private, public
         );
         self.app
             .keys_store
-            .update_key(&merchant_id, private.clone())
+            .update_key(&request.merchant_id, private.clone())
             .await;
 
         return Ok(tonic::Response::new(GetMerchantPublicKeyResponse {

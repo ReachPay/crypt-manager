@@ -12,9 +12,14 @@ message CryptCallbackMessageResponse{
     string Message = 1;
 }
 
+message ResetKeyPairRequest {
+    string MerchantId = 1;
+}
+
 message GetMerchantPublicKeyRequest {
     string MerchantId = 1;
 }
+
 
 message GetMerchantPublicKeyResponse {
     optional string KeyContent = 1;
@@ -23,6 +28,6 @@ message GetMerchantPublicKeyResponse {
 service CryptManagerGrpcService {
     rpc CryptMessage(CryptCallbackMessageRequest) returns (CryptCallbackMessageResponse);
     rpc GetPublicKey(GetMerchantPublicKeyRequest) returns (GetMerchantPublicKeyResponse);
-    rpc ResetKeyPair(GetMerchantPublicKeyRequest) returns (GetMerchantPublicKeyResponse);
+    rpc ResetKeyPair(ResetKeyPairRequest) returns (GetMerchantPublicKeyResponse);
     rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
